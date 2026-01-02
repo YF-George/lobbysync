@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime 測試 - LobbySync</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin-top: 0; }
+        .status {
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #ccc;
+            padding-left: 10px;
+        }
+        .log-entry.success { border-color: #28a745; }
+        .log-entry.error { border-color: #dc3545; }
+        .log-entry.update { border-color: #007bff; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .controls { margin: 20px 0; }
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Supabase Realtime 測試工具</h1>
+        
+        <div id="status" class="status info">
+            正在初始化...
+        </div>
+
+        <div class="controls">
+            <button id="connectBtn" onclick="connect()">連接 Realtime</button>
+            <button id="testUpdateBtn" onclick="testUpdate()" disabled>發送測試更新</button>
+            <button id="clearLogBtn" onclick="clearLog()">清除記錄</button>
+        </div>
+
+        <h3>即時記錄：</h3>
+        <div id="log" class="log">
+            <div class="log-entry">等待連接...</div>
+        </div>
+
+        <h3>使用說明：</h3>
+        <ol>
+            <li>點擊「連接 Realtime」按鈕建立 WebSocket 連接</li>
+            <li>開啟第二個分頁測試頁面：<code>http://localhost:5173/test?party=test-party-001</code></li>
+            <li>在測試頁面修改任一 slot 的資料</li>
+            <li>回到此頁面，應該會看到即時更新記錄（< 500ms）</li>
+            <li>或點擊「發送測試更新」直接從這裡更新資料庫</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+        // 從環境變數讀取（需要替換為實際值）
+        const SUPABASE_URL = 'https://ozzurrifqgwokxfoadhv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96enVycmlmcWd3b2t4Zm9hZGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNDYzMTksImV4cCI6MjA4MjkyMjMxOX0.XNKJPF_kGxwO3479arNoLMTq4aFjOdik1LvggAqSsAc';
+
+        let supabase;
+        let channel;
+        let updateCount = 0;
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString('zh-TW', { hour12: false, fractionalSecondDigits: 3 });
+            entry.textContent = `[${time}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        window.connect = async function() {
+            addLog('初始化 Supabase client...', 'info');
+            
+            try {
+                supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                addLog('✓ Supabase client 已建立', 'success');
+
+                // 匿名登入
+                addLog('嘗試匿名登入...', 'info');
+                const { data, error } = await supabase.auth.signInAnonymously();
+                
+                if (error) {
+                    throw new Error(`登入失敗: ${error.message}`);
+                }
+                
+                addLog(`✓ 匿名登入成功，User ID: ${data.user.id.substring(0, 8)}...`, 'success');
+
+                // 建立 Realtime 訂閱
+                addLog('建立 Realtime 訂閱...', 'info');
+                channel = supabase
+                    .channel('test-realtime-channel')
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*',
+                            schema: 'public',
+                            table: 'slot'
+                        },
+                        (payload) => {
+                            updateCount++;
+                            const slot = payload.new || payload.old;
+                            addLog(
+                                `🔔 收到 ${payload.eventType} 事件 | Slot: ${slot.id} | 名稱: ${slot.display_name || '(空)'} | 裝分: ${slot.gear_score}`,
+                                'update'
+                            );
+                        }
+                    )
+                    .subscribe((status) => {
+                        if (status === 'SUBSCRIBED') {
+                            addLog('✓ WebSocket 訂閱成功！等待資料變更...', 'success');
+                            updateStatus(`已連接 - 已收到 ${updateCount} 次更新`, 'success');
+                            document.getElementById('connectBtn').disabled = true;
+                            document.getElementById('testUpdateBtn').disabled = false;
+                        } else if (status === 'CHANNEL_ERROR') {
+                            throw new Error('訂閱頻道時發生錯誤');
+                        } else if (status === 'TIMED_OUT') {
+                            throw new Error('訂閱超時');
+                        } else if (status === 'CLOSED') {
+                            addLog('⚠ 連接已關閉', 'error');
+                            updateStatus('連接已關閉', 'error');
+                        }
+                    });
+
+            } catch (err) {
+                addLog(`❌ 錯誤: ${err.message}`, 'error');
+                updateStatus(`錯誤: ${err.message}`, 'error');
+            }
+        };
+
+        window.testUpdate = async function() {
+            if (!supabase) {
+                addLog('❌ 請先連接 Realtime', 'error');
+                return;
+            }
+
+            try {
+                const testSlotId = 'slot-test-party-001-00';
+                const newName = `測試_${Date.now()}`;
+                const newGearScore = Math.floor(Math.random() * 1000000);
+
+                addLog(`發送更新請求: ${testSlotId} -> 名稱: ${newName}, 裝分: ${newGearScore}`, 'info');
+
+                const { data, error } = await supabase
+                    .from('slot')
+                    .update({ 
+                        display_name: newName,
+                        gear_score: newGearScore,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', testSlotId)
+                    .select();
+
+                if (error) {
+                    throw error;
+                }
+
+                addLog(`✓ 更新成功，等待 Realtime 推送...`, 'success');
+            } catch (err) {
+                addLog(`❌ 更新失敗: ${err.message}`, 'error');
+            }
+        };
+
+        window.clearLog = function() {
+            document.getElementById('log').innerHTML = '<div class="log-entry">記錄已清除</div>';
+        };
+
+        // 自動連接
+        setTimeout(() => {
+            addLog('準備就緒，點擊「連接 Realtime」開始測試', 'info');
+        }, 100);
+    </script>
+</body>
+</html>
