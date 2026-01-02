@@ -1,83 +1,52 @@
-# LobbySync AI Coding Agent Instructions
+﻿## LobbySync — AI agent runtime notes
 
-## Project Overview
-LobbySync is a SvelteKit-based full-stack web application with PostgreSQL database backend. The project uses Drizzle ORM for database operations and Tailwind CSS for styling.
+This file gives an AI coding agent the minimal, practical knowledge to be productive in this repo.
 
-## Architecture
+**Quick summary**
+- Stack: SvelteKit (Svelte) frontend + Node server build artifacts. DB: PostgreSQL via Drizzle ORM. Realtime/Sessions use Supabase in parts of the codebase.
+- Key runtime: dev with `pnpm dev`; builds output into `build/` (both `client/` and `server/`).
 
-### Stack & Key Dependencies
-- **Frontend Framework**: SvelteKit 2.49.1 with Svelte 5.45.6
-- **Build Tool**: Vite 7.2.6 with Tailwind 4.1.17
-- **Database**: PostgreSQL with Drizzle ORM 0.45.0
-- **Server Adapter**: Node.js adapter (`@sveltejs/adapter-node`)
-- **Type Safety**: TypeScript with strict mode enabled
-- **Code Quality**: ESLint (TypeScript + Svelte) + Prettier
+**Essential files & places to read first**
+- Project root: [drizzle.config.ts](../drizzle.config.ts) — Drizzle/migration config.
+- DB schema: [src/lib/server/db/schema.ts](../src/lib/server/db/schema.ts) and SQL snapshots in the [drizzle/](../drizzle/) folder.
+- Server helpers: [src/lib/server/supabase.ts](../src/lib/server/supabase.ts) and [src/lib/server/auth.ts](../src/lib/server/auth.ts).
+- Client Supabase helper: [src/lib/supabaseClient.ts](../src/lib/supabaseClient.ts).
+- Route patterns: see `src/routes/` — resource routes and API endpoints follow SvelteKit conventions (`+page.svelte`, `+layout.svelte`, `+server.ts`).
+- Seed script: [scripts/seed-test-data.ts](../scripts/seed-test-data.ts).
 
-### Directory Structure
-- `src/lib/` - Shared reusable code and server utilities
-  - `lib/server/db/` - Database schema and client initialization (Drizzle)
-  - `lib/assets/` - Static assets
-- `src/routes/` - SvelteKit page components and layouts (file-based routing)
-- `src/app.html`, `app.d.ts` - App entry point and global types
+**Architecture & patterns (observable in code)**
+- Server-only code lives under `src/lib/server/` and must not be imported by browser code. Server endpoints use `+server.ts` and load functions.
+- Page components use `+page.svelte` / `+layout.svelte`. Any module named `*.svelte.ts` in `src/routes/` is a server module.
+- Database logic: `src/lib/server/db/index.ts` initializes the Drizzle client; all schema definitions are in `schema.ts`. Migrations live in `drizzle/*` as SQL snapshots.
+- Realtime: there is a `src/lib/realtime.ts` and Supabase helpers; realtime behavior and presence are implemented via Supabase client in server and client code — ensure environment keys are available when running.
 
-### Data Flow
-Database operations are server-side only. Routes use SvelteKit's server-side data loading (`+layout.svelte`, `+page.svelte`). Client components call server endpoints or load functions for data—never directly import server utilities in client code.
+**Developer workflows & helpful commands**
+- Start dev: `pnpm dev` (hot reload). Use this first to reproduce runtime behavior.
+- Build for production: `pnpm build` → outputs `build/` (check `build/server/` and `build/client/`).
+- Type-check & Svelte checks: `pnpm check` (run before larger refactors).
+- Lint & format: `pnpm lint` / `pnpm format`.
+- Drizzle migrations: `pnpm db:generate` then `pnpm db:push`. Migrations are also viewable under `drizzle/`.
 
-## Development Workflows
+Notes: the repo uses `pnpm` tooling; do not assume `npm` or `yarn` scripts behave identically.
 
-### Essential Commands
-```bash
-pnpm dev              # Start dev server (with hot reload)
-pnpm build            # Production build (outputs Node.js app)
-pnpm check            # Type-check + Svelte validation
-pnpm lint             # ESLint + Prettier check
-pnpm format           # Auto-format code
-pnpm db:generate      # Generate Drizzle migrations
-pnpm db:push          # Apply schema changes to database
-pnpm db:studio        # Interactive Drizzle Studio web UI
-```
+**Project-specific conventions**
+- Server-only modules: place under `src/lib/server/`. When you need secrets or DB, add code here and call via `+server.ts` endpoints.
+- Database access: always through the initialized Drizzle client in `src/lib/server/db/index.ts` — avoid creating ad-hoc connections.
+- Seed + snapshots: use `scripts/seed-test-data.ts` and the `drizzle/` SQL files for tests/dev data; don't hardcode IDs from snapshots.
+- Build artifacts: prebuilt app files live in `build/` — useful for reproduction of production behavior without building locally.
 
-### Database Setup
-1. Set `DATABASE_URL` environment variable (PostgreSQL connection string required in `drizzle.config.ts`)
-2. Define schema in `src/lib/server/db/schema.ts` using Drizzle's `pgTable()`
-3. Run `pnpm db:generate` for migrations, then `pnpm db:push` to apply
+**Integration & environment**
+- Required env vars: `DATABASE_URL` (Drizzle/Postgres) and Supabase keys (check `.env` or deployment secrets). See [drizzle.config.ts](../drizzle.config.ts) and `src/lib/server/supabase.ts`.
+- External services: Supabase (auth + realtime). Be cautious when editing auth-related code in `src/lib/server/auth.ts` and client helpers.
 
-## Project-Specific Patterns
+**How AI agents should operate here (practical rules)**
+1. Read `src/lib/server/db/schema.ts` and `drizzle.config.ts` before proposing DB changes. If adding/removing columns, include migration steps (`pnpm db:generate` + `pnpm db:push`).
+2. Prefer server-side changes under `src/lib/server/` and expose via `+server.ts` endpoints; do not import server-only modules into client bundles.
+3. Run `pnpm check` and `pnpm lint` after edits; include small test runs (manual page load) for UI changes if possible.
+4. When modifying Realtime/Supabase code, list required env vars and adjust `scripts/seed-test-data.ts` if seeds need Supabase interactions.
 
-### File Organization Conventions
-- Server-side code: `src/lib/server/` (imports work only in `+server.ts` files and load functions)
-- Client-safe code: `src/lib/` root level (exported from `lib/index.ts`)
-- Routes: `src/routes/+page.svelte`, `src/routes/+layout.svelte`
+**Quick examples**
+- Add a new API endpoint: create `src/routes/api/your-resource/+server.ts` and use the Drizzle client from `src/lib/server/db/index.ts`.
+- Add a DB column: update `src/lib/server/db/schema.ts`, run `pnpm db:generate`, commit migration in `drizzle/`, then `pnpm db:push` for your dev DB.
 
-### Database Pattern (Drizzle ORM)
-All tables defined in `src/lib/server/db/schema.ts` using `pgTable()`. Example:
-```typescript
-export const user = pgTable('user', { 
-  id: serial('id').primaryKey(), 
-  age: integer('age') 
-});
-```
-Access database in server-side context only (load functions, `+server.ts` endpoints).
-
-### Type Safety
-- `tsconfig.json` has `strict: true` - enforce strict null checking and all strict settings
-- Import styles: Use `$lib` alias for `src/lib/` imports
-- `.svelte.ts` files are server modules when in `src/routes/`, client modules in `src/lib/`
-
-## Code Quality Standards
-- **Linting**: ESLint runs on JavaScript/TypeScript and Svelte files; Prettier for formatting
-- **Pre-commit Check**: Run `pnpm lint` before committing
-- **Type Checking**: Use `pnpm check:watch` for continuous validation during development
-- **Svelte-specific**: `svelte-check` validates all `.svelte` files
-
-## Integration Points
-- PostgreSQL connection via `DATABASE_URL` env variable
-- Drizzle Kit CLI for migrations (see `drizzle.config.ts`)
-- SvelteKit adapters: currently Node.js, may swap for other environments
-
-## Notes for AI Agents
-- Always run `pnpm check` and `pnpm lint` before suggesting code changes
-- When modifying routes, remember SvelteKit uses file-based routing
-- Database changes require migration: generate, review, then push
-- Client code cannot import from `src/lib/server/` directly
-- Tailwind CSS is integrated via `@tailwindcss/vite` and typography/forms plugins
+If anything above is unclear or you'd like a different emphasis (tests, CI, or deployment), tell me which area to expand.

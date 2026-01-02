@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { page } from '$app/stores';
   import { subscribeToPartyUpdates } from '$lib/realtime';
-  import supabase from '$lib/supabaseClient';
+  import { supabase } from '$lib/supabaseClient';
 
   let partyId = $derived($page.url.searchParams.get('party') || 'test-party-001');
   let party: any = $state(null);
