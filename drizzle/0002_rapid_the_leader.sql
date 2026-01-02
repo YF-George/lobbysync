@@ -1,0 +1,1 @@
+ALTER TABLE "slot" ADD COLUMN "tags" text[] DEFAULT ARRAY[]::text[];
