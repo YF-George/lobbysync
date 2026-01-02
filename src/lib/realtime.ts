@@ -2,11 +2,7 @@
 // 用途：讓前端可以輕鬆訂閱特定 party 的即時更新
 // 需要：在前端初始化時提供 Supabase client（使用 PUBLIC_SUPABASE_ANON_KEY）
 
-import { createClient } from '@supabase/supabase-js';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
-
-// 前端專用的 Supabase client（使用 anon key，權限受限）
-const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+import supabase from '$lib/supabaseClient';
 
 /**
  * 訂閱特定 party 的 slot 更新
