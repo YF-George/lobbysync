@@ -1,14 +1,14 @@
 import { json } from '@sveltejs/kit';
-import { db, pgClient } from '$lib/server/db';
+import { db } from '$lib/server/db';
 import { party, slot } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 export async function GET({ params }) {
   const id = params.id;
   try {
-    // 嘗試使用原生 pgClient 執行相同查詢以捕捉更完整的 DB 錯誤資訊
-    const q = `select id, name, raid_mode, run_type, start_at, owner_id, status, is_locked, locked_by, locked_at, discord_webhook, gear_limit, max_players, current_players, note, updated_at, created_at from party where id = $1`;
-    const rows = await pgClient.query(q, [id]);
+    // 使用 Drizzle 的 sql 輔助函數執行原生 SQL 查詢
+    const q = sql`select id, name, raid_mode, run_type, start_at, owner_id, status, is_locked, locked_by, locked_at, discord_webhook, gear_limit, max_players, current_players, note, updated_at, created_at from party where id = ${id}`;
+    const rows = await db.execute(q);
     if (!rows || rows.length === 0) return json({ error: 'not found' }, { status: 404 });
     const p = rows[0];
 
