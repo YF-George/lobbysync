@@ -1,0 +1,1 @@
+ALTER TABLE "party" ADD COLUMN "level_slot" smallint DEFAULT 0 NOT NULL;

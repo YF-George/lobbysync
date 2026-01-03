@@ -1,0 +1,1 @@
+ALTER TABLE "party" ALTER COLUMN "name" SET DEFAULT '';

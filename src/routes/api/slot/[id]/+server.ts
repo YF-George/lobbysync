@@ -27,7 +27,7 @@ export async function PATCH({ params, request }) {
   const userId = await mapAuthUserToDbUserId(user.id);
 
   // 欄位白名單 + 基本驗證：避免未預期欄位被覆寫。
-  const allowed = ['display_name', 'gear_score', 'position_type', 'status', 'user_id', 'locked_until', 'note', 'tags'];
+	const allowed = ['display_name', 'gear_score', 'position_type', 'status', 'user_id', 'locked_until', 'note', 'tags', 'pinned', 'role'];
   const update: Record<string, any> = {};
   for (const k of allowed) if (k in body) update[k] = body[k];
   if (Object.keys(update).length === 0) return json({ error: 'no updatable fields' }, { status: 400 });

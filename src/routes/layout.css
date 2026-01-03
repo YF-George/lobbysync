@@ -1,3 +1,17 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+@variant dark (&:where(.dark, .dark *));
+
+/* 全域隱藏滾動條但保留滾動功能 */
+html, body, :root, * {
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
+}
+
+/* WebKit (Chrome, Safari, newer Edge) — 設為 0 寬度而非 display:none 保留滑動 */
+*::-webkit-scrollbar {
+	width: 0;
+	height: 0;
+}

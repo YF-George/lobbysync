@@ -23,10 +23,12 @@ import { supabase } from '$lib/supabaseClient';
  */
 export function subscribeToPartyUpdates(
   partyId: string,
-  onSlotUpdate: (payload: any) => void
+  onSlotUpdate: (payload: any) => void,
+  onPartyUpdate?: (payload: any) => void
 ) {
   const channel = supabase.channel(`party:${partyId}`);
 
+  // 監聽 slot 表的更新
   channel
     .on(
       'postgres_changes',
@@ -37,15 +39,41 @@ export function subscribeToPartyUpdates(
         filter: `raid_id=eq.${partyId}`
       },
       (payload) => {
-        console.log('🔔 Database Changes:', payload);
+        console.log('🔔 Slot Update:', payload);
         onSlotUpdate(payload.new);
       }
-    )
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        console.log(`✓ 已訂閱 party:${partyId} 的即時更新（Database Changes）`);
+    );
+
+  // 監聽 party 表的更新
+  if (onPartyUpdate) {
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'party',
+        filter: `id=eq.${partyId}`
+      },
+      (payload) => {
+        console.log('🔔 Party Update:', payload);
+        onPartyUpdate(payload.new);
       }
+    );
+  }
+
+  // 後端廣播的 party 更新（fallback，避免 DB replication 未啟用）
+  if (onPartyUpdate) {
+    channel.on('broadcast', { event: 'party_updated' }, ({ payload }) => {
+      console.log('🔔 Party Broadcast:', payload);
+      onPartyUpdate(payload);
     });
+  }
+
+  channel.subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`✓ 已訂閱 party:${partyId} 的即時更新（Slot + Party Database Changes）`);
+    }
+  });
 
   // 回傳 unsubscribe 函式
   return () => {

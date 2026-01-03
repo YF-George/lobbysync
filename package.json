@@ -13,7 +13,7 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"db:push": "drizzle-kit push",
-		"db:generate": "drizzle-kit generate",
+		 "db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"seed": "tsx scripts/seed-test-data.ts"
@@ -40,6 +40,7 @@
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"svelte": "^5.45.6",
 		"svelte-check": "^4.3.4",
+		"tsx": "^4.19.1",
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.48.1",
