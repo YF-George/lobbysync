@@ -3,6 +3,7 @@ import { verifyAuth, mapAuthUserToDbUserId } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { party, slot } from '$lib/server/db/schema';
 import { sql } from 'drizzle-orm';
+import { supabaseAdmin } from '$lib/server/supabase';
 
 export async function POST({ request }: { request: Request }) {
 	const authHeader = request.headers.get('authorization');
@@ -57,6 +58,32 @@ export async function POST({ request }: { request: Request }) {
         updated_at = NOW()
         WHERE raid_id NOT LIKE 'test-party-%' 
         AND (pinned = FALSE OR pinned IS NULL)`);
+
+			// Broadcast updates for each party to minimize client latency
+			try {
+				const updatedParties = await db
+					.select()
+					.from(party)
+					.where(sql`id NOT LIKE 'test-party-%'`);
+				for (const p of updatedParties) {
+					const pId = p.id;
+					const slots = await db
+						.select()
+						.from(slot)
+						.where(eq(slot.raid_id, pId))
+						.orderBy(slot.slot_order);
+					const channel = supabaseAdmin.channel(`party:${pId}`);
+					await channel.subscribe();
+					await channel.send({
+						type: 'broadcast',
+						event: 'party_and_slots_updated',
+						payload: { party: p, slots }
+					});
+					await channel.unsubscribe();
+				}
+			} catch (bErr) {
+				console.warn('Broadcast error in admin refresh-ten-parties:', bErr);
+			}
 
 			return json({ ok: true, reset: existing.length });
 		}

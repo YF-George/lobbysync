@@ -7,20 +7,38 @@
 // - 若金鑰外流，請立即在 Supabase 控制台撤銷並重新產生金鑰。
 
 import { createClient } from '@supabase/supabase-js';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 
-// 驗證必要的環境變數，若未設定則在啟動時拋出錯誤，避免隱性失敗。
-if (!PUBLIC_SUPABASE_URL) throw new Error('PUBLIC_SUPABASE_URL is not set');
-if (!env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
+// Prefer private server env vars. Fallback to public/static or process.env
+const SUPABASE_URL = env.SUPABASE_URL ?? PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY =
+	env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// 初始化一個 admin client：
-// - 使用 Service Role Key 可以繞過 RLS（Row Level Security），用於
-//   初始化資料、後台管理或其他必須有完全權限的 server-side 任務。
-// - 設定 `persistSession: false` 可以避免在 server 端儲存/建立 user session。
-export const supabaseAdmin = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-	auth: { persistSession: false }
-});
+let supabaseAdmin: any;
+if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+	// Properly configured admin client
+	supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+		auth: { persistSession: false }
+	});
+} else {
+	// Fallback dummy client to avoid build-time crashes when env vars are not set (local dev).
+	// Real deployments (Vercel) should set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.
+	console.warn(
+		'supabaseAdmin: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set; using dummy client'
+	);
+	supabaseAdmin = {
+		channel: () => ({
+			subscribe: async () => {},
+			send: async () => {
+				throw new Error('supabaseAdmin not configured');
+			},
+			unsubscribe: async () => {}
+		}),
+		removeChannel: () => {},
+		auth: { admin: false }
+	};
+}
 
-// 預設匯出方便在其他 server 模組中直接使用：
+export { supabaseAdmin };
 export default supabaseAdmin;

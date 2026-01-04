@@ -14,7 +14,7 @@ This file gives an AI coding agent the minimal, practical knowledge to be produc
 - Server helpers: [src/lib/server/supabase.ts](../src/lib/server/supabase.ts) and [src/lib/server/auth.ts](../src/lib/server/auth.ts).
 - Client Supabase helper: [src/lib/supabaseClient.ts](../src/lib/supabaseClient.ts).
 - Route patterns: see `src/routes/` — resource routes and API endpoints follow SvelteKit conventions (`+page.svelte`, `+layout.svelte`, `+server.ts`).
-- Seed script: [scripts/seed-test-data.ts](../scripts/seed-test-data.ts).
+- Seed script: [scripts/seed-test-data.ts](scripts/seed-test-data.ts).
 
 **Architecture & patterns (observable in code)**
 
