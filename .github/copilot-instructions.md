@@ -9,12 +9,12 @@ This file gives an AI coding agent the minimal, practical knowledge to be produc
 
 **Essential files & places to read first**
 
-- Project root: [drizzle.config.ts](../drizzle.config.ts) — Drizzle/migration config.
-- DB schema: [src/lib/server/db/schema.ts](../src/lib/server/db/schema.ts) and SQL snapshots in the [drizzle/](../drizzle/) folder.
-- Server helpers: [src/lib/server/supabase.ts](../src/lib/server/supabase.ts) and [src/lib/server/auth.ts](../src/lib/server/auth.ts).
-- Client Supabase helper: [src/lib/supabaseClient.ts](../src/lib/supabaseClient.ts).
+- Project root: `drizzle.config.ts` — Drizzle/migration config.
+- DB schema: `src/lib/server/db/schema.ts` and SQL snapshots in the `drizzle/` folder.
+- Server helpers: `src/lib/server/supabase.ts` and `src/lib/server/auth.ts`.
+- Client Supabase helper: `src/lib/supabaseClient.ts`.
 - Route patterns: see `src/routes/` — resource routes and API endpoints follow SvelteKit conventions (`+page.svelte`, `+layout.svelte`, `+server.ts`).
-- Seed script: [scripts/seed-test-data.ts](scripts/seed-test-data.ts).
+- Seed script: `scripts/seed-test-data.ts`.
 
 **Architecture & patterns (observable in code)**
 
@@ -42,7 +42,7 @@ Notes: the repo uses `pnpm` tooling; do not assume `npm` or `yarn` scripts behav
 
 **Integration & environment**
 
-- Required env vars: `DATABASE_URL` (Drizzle/Postgres) and Supabase keys (check `.env` or deployment secrets). See [drizzle.config.ts](../drizzle.config.ts) and `src/lib/server/supabase.ts`.
+- Required env vars: `DATABASE_URL` (Drizzle/Postgres) and Supabase keys (check `.env` or deployment secrets). See `drizzle.config.ts` and `src/lib/server/supabase.ts`.
 - External services: Supabase (auth + realtime). Be cautious when editing auth-related code in `src/lib/server/auth.ts` and client helpers.
 
 **How AI agents should operate here (practical rules)**

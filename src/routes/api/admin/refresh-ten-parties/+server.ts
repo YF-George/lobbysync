@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { verifyAuth, mapAuthUserToDbUserId } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { party, slot } from '$lib/server/db/schema';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import { supabaseAdmin } from '$lib/server/supabase';
 
 export async function POST({ request }: { request: Request }) {

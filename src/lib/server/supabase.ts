@@ -8,10 +8,10 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/private';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 
-// Prefer private server env vars. Fallback to public/static or process.env
-const SUPABASE_URL = env.SUPABASE_URL ?? PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+// Prefer private server env vars. Fallback to process.env (including PUBLIC_*)
+const SUPABASE_URL =
+	env.SUPABASE_URL ?? process.env.SUPABASE_URL ?? process.env.PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY =
 	env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 
