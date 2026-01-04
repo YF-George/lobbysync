@@ -5,7 +5,10 @@
 @variant dark (&:where(.dark, .dark *));
 
 /* 全域隱藏滾動條但保留滾動功能 */
-html, body, :root, * {
+html,
+body,
+:root,
+* {
 	-ms-overflow-style: none; /* IE and Edge */
 	scrollbar-width: none; /* Firefox */
 }

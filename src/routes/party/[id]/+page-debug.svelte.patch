@@ -1,0 +1,29 @@
+--- a/src/routes/party/[id]/+page.svelte
++++ b/src/routes/party/[id]/+page.svelte
+@@ -78,17 +78,24 @@
+     async function updateParty(changes: any) {
+         if (!isAuthenticated) return;
+         if (!party?.id) return;
++        console.log('🔧 updateParty 呼叫:', changes);
+         const old = { ...party };
+-        party = { ...party, ...changes };
++        // 先樂觀更新
++        party = { ...party, ...changes };
++        console.log('  樂觀更新後 party:', { raid_mode: party.raid_mode, run_type: party.run_type, level_slot: party.level_slot });
+         try {
+             const res = await fetch(`/api/party/${party.id}`, {
+                 method: 'PATCH',
+                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                 body: JSON.stringify(changes)
+             });
++            console.log('  API 回應狀態:', res.status);
+             if (res.ok) {
+                 const data = await res.json();
++                console.log('  API 回傳 data:', data);
+                 // 使用後端回傳的 party（若有）來同步本地狀態
+                 if (data && data.party) {
+                     party = data.party;
++                    console.log('  最終 party:', { raid_mode: party.raid_mode, run_type: party.run_type, level_slot: party.level_slot });
+                 }
+             } else {
+                 party = old;

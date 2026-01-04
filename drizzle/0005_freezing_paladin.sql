@@ -1,7 +1,2 @@
-CREATE TABLE "admin" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"user_id" integer NOT NULL,
-	"note" varchar(255),
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "admin_user_id_unique" UNIQUE("user_id")
-);
+-- Admin table creation removed by refactor; admin functionality deleted from codebase.
+-- Original migration content removed to avoid creating the admin table in new environments.

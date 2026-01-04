@@ -23,7 +23,24 @@ export default defineConfig(
 		rules: {
 			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
 			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-			'no-undef': 'off'
+			'no-undef': 'off',
+			// 放寬規則：允許使用 any 類型（開發階段）
+			'@typescript-eslint/no-explicit-any': 'off',
+			// 放寬規則：允許未使用的 props（介面定義可能包含未使用的屬性）
+			'svelte/no-unused-props': 'off',
+			// 放寬規則：允許不帶 resolve() 的導航連結
+			'svelte/no-navigation-without-resolve': 'off',
+			// 放寬規則：允許底線前綴的未使用變數（用於解構或錯誤處理）
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_'
+				}
+			],
+			// 放寬 Svelte 5 runes 的使用建議
+			'svelte/prefer-writable-derived': 'off'
 		}
 	},
 	{

@@ -18,11 +18,9 @@ if (!env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('SUPABASE_SERVICE_ROLE_KEY i
 // - 使用 Service Role Key 可以繞過 RLS（Row Level Security），用於
 //   初始化資料、後台管理或其他必須有完全權限的 server-side 任務。
 // - 設定 `persistSession: false` 可以避免在 server 端儲存/建立 user session。
-export const supabaseAdmin = createClient(
-  PUBLIC_SUPABASE_URL,
-  env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { persistSession: false } }
-);
+export const supabaseAdmin = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+	auth: { persistSession: false }
+});
 
 // 預設匯出方便在其他 server 模組中直接使用：
 export default supabaseAdmin;

@@ -9,7 +9,7 @@ export const load: PageLoad = async ({ fetch }) => {
 		}
 		const data = await res.json();
 		return { parties: data.parties || [] };
-	} catch (err) {
+	} catch (_err) {
 		throw error(500, '載入派對列表時出錯');
 	}
 };

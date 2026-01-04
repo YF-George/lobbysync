@@ -41,16 +41,8 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		const localUserId = await mapAuthUserToDbUserId(authUser.id);
 
 		const body = await request.json();
-		const {
-			actor_name,
-			action,
-			target_type,
-			target_id,
-			field,
-			old_value,
-			new_value,
-			details
-		} = body;
+		const { actor_name, action, target_type, target_id, field, old_value, new_value, details } =
+			body;
 
 		// 插入記錄
 		const [log] = await db

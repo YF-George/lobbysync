@@ -7,11 +7,7 @@ import { desc, eq } from 'drizzle-orm';
 export const GET: RequestHandler = async () => {
 	try {
 		// 获取所有派对，按创建时间倒序
-		const parties = await db
-			.select()
-			.from(party)
-			.orderBy(desc(party.created_at))
-			.limit(100);
+		const parties = await db.select().from(party).orderBy(desc(party.created_at)).limit(100);
 
 		// 为每个派对获取其成员信息
 		const partiesWithMembers = await Promise.all(
@@ -40,9 +36,6 @@ export const GET: RequestHandler = async () => {
 		});
 	} catch (error) {
 		console.error('Failed to fetch parties:', error);
-		return json(
-			{ success: false, error: 'Failed to fetch parties' },
-			{ status: 500 }
-		);
+		return json({ success: false, error: 'Failed to fetch parties' }, { status: 500 });
 	}
 };

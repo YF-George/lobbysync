@@ -9,8 +9,6 @@ const authOptions = {
 	detectSessionInUrl: false
 };
 
-export const supabase = createClient(
-	PUBLIC_SUPABASE_URL,
-	PUBLIC_SUPABASE_ANON_KEY,
-	{ auth: authOptions }
-);
+export const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+	auth: authOptions
+});

@@ -1,4 +1,14 @@
-import { pgTable, serial, integer, varchar, text, smallint, boolean, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+	pgTable,
+	serial,
+	integer,
+	varchar,
+	text,
+	smallint,
+	boolean,
+	timestamp,
+	uuid
+} from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Users table (existing)
@@ -14,7 +24,9 @@ export const user = pgTable('user', {
 // Parties (副本場次)
 export const party = pgTable('party', {
 	// UUID stored as varchar(36) with gen_random_uuid() default; requires pgcrypto extension
-	id: varchar('id', { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+	id: varchar('id', { length: 36 })
+		.primaryKey()
+		.default(sql`gen_random_uuid()`),
 	// 允許預設為空字串，避免 null 值導致 UI 或後端錯誤
 	name: varchar('name', { length: 255 }).notNull().default(''),
 	raid_mode: smallint('raid_mode').notNull().default(1),
@@ -32,13 +44,19 @@ export const party = pgTable('party', {
 	max_players: smallint('max_players').notNull().default(10),
 	current_players: smallint('current_players').notNull().default(0),
 	note: text('note'),
-	updated_at: timestamp('updated_at', { mode: 'string' }).notNull().default(sql`now()`),
-	created_at: timestamp('created_at', { mode: 'string' }).notNull().default(sql`now()`)
+	updated_at: timestamp('updated_at', { mode: 'string' })
+		.notNull()
+		.default(sql`now()`),
+	created_at: timestamp('created_at', { mode: 'string' })
+		.notNull()
+		.default(sql`now()`)
 });
 
 // Slots (Grid 中的一格)
 export const slot = pgTable('slot', {
-	id: varchar('id', { length: 64 }).primaryKey().default(sql`gen_random_uuid()`),
+	id: varchar('id', { length: 64 })
+		.primaryKey()
+		.default(sql`gen_random_uuid()`),
 	raid_id: varchar('raid_id', { length: 36 }).notNull(),
 	slot_order: smallint('slot_order').notNull().default(0),
 	position_type: varchar('position_type', { length: 20 }).notNull().default('dps'),
@@ -52,21 +70,20 @@ export const slot = pgTable('slot', {
 	pinned: boolean('pinned').notNull().default(false),
 	// 新增：角色標記（隊長/幫打）
 	role: varchar('role', { length: 20 }).default(''),
-	updated_at: timestamp('updated_at', { mode: 'string' }).notNull().default(sql`now()`)
+	updated_at: timestamp('updated_at', { mode: 'string' })
+		.notNull()
+		.default(sql`now()`)
 });
 
 // Admins table: 可用於管理多個管理員帳號（以 local user.id 參照）
-export const admin = pgTable('admin', {
-	id: serial('id').primaryKey(),
-	// 參照 user.id（integer）
-	user_id: integer('user_id').notNull().unique(),
-	note: varchar('note', { length: 255 }),
-	created_at: timestamp('created_at', { mode: 'string' }).notNull().default(sql`now()`)
-});
+// Admin table removed — admin functionality has been removed from the codebase.
+// Historical migrations kept under drizzle/ but the runtime schema no longer exposes an `admin` table.
 
 // Changelog table: 追蹤所有變更記錄
 export const changelog = pgTable('changelog', {
-	id: varchar('id', { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+	id: varchar('id', { length: 36 })
+		.primaryKey()
+		.default(sql`gen_random_uuid()`),
 	party_id: varchar('party_id', { length: 36 }).notNull(),
 	actor_id: integer('actor_id'), // 操作者 user.id
 	actor_name: varchar('actor_name', { length: 100 }), // 操作者名稱快照
@@ -77,15 +94,7 @@ export const changelog = pgTable('changelog', {
 	old_value: text('old_value'), // 舊值
 	new_value: text('new_value'), // 新值
 	details: text('details'), // 詳細描述
-	created_at: timestamp('created_at', { mode: 'string' }).notNull().default(sql`now()`)
-});
-
-// Kicked users table: 管理員踢人記錄
-export const kicked = pgTable('kicked', {
-	id: serial('id').primaryKey(),
-	party_id: varchar('party_id', { length: 36 }).notNull(),
-	user_auth_id: uuid('user_auth_id').notNull(), // Supabase auth UUID
-	kicked_by: integer('kicked_by').notNull(), // 踢人的管理員 user.id
-	kicked_at: timestamp('kicked_at', { mode: 'string' }).notNull().default(sql`now()`),
-	reason: text('reason')
+	created_at: timestamp('created_at', { mode: 'string' })
+		.notNull()
+		.default(sql`now()`)
 });

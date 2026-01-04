@@ -15,7 +15,9 @@ function setTheme(dark: boolean) {
 	if (!browser) return;
 	try {
 		localStorage.setItem('theme', dark ? 'dark' : 'light');
-	} catch (e) {}
+	} catch {
+		// Ignore localStorage errors
+	}
 	applyTheme(dark);
 }
 
@@ -23,7 +25,11 @@ function toggleTheme() {
 	theme.update((v) => {
 		const nv = !v;
 		if (browser) {
-			try { localStorage.setItem('theme', nv ? 'dark' : 'light'); } catch (e) {}
+			try {
+				localStorage.setItem('theme', nv ? 'dark' : 'light');
+			} catch {
+				// Ignore localStorage errors
+			}
 		}
 		applyTheme(nv);
 		return nv;
@@ -36,8 +42,9 @@ function initTheme() {
 		const saved = localStorage.getItem('theme');
 		if (saved === 'dark') setTheme(true);
 		else if (saved === 'light') setTheme(false);
+	} catch {
+		// Ignore localStorage errors
 	}
-	catch (e) {}
 }
 
 export { theme, setTheme, toggleTheme, initTheme };
