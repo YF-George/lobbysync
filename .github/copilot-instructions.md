@@ -28,12 +28,12 @@
 - 實時/協作：有引入 `yjs` 與 `partykit` / `y-partykit`，表示專案可能有 collaborative editing / shared state 機制，修改這部分需注意同步協定與初始化流程。
 
 檔案參考（閱讀優先順序）
-- [package.json](package.json) — 腳本、相依性。
-- [svelte.config.js](svelte.config.js)、[vite.config.ts](vite.config.ts) — build 與 plugin 配置。
-- [drizzle.config.ts](drizzle.config.ts) — Drizzle 設定與 migration 流程。
-- [src/lib/server/auth.ts](src/lib/server/auth.ts) — 認證/匿名處理、auth -> db user 對映。
-- [src/lib/server/db/schema.ts](src/lib/server/db/schema.ts) — DB schema 定義。
-- [src/routes](src/routes) — SvelteKit 路由與 server endpoints。
+ - `package.json` — 腳本、相依性。
+ - `svelte.config.js`, `vite.config.ts` — build 與 plugin 配置。
+ - `drizzle.config.ts` — Drizzle 設定與 migration 流程。
+ - `src/lib/server/auth.ts` — 認證/匿名處理、auth -> db user 對映。
+ - `src/lib/server/db/schema.ts` — DB schema 定義。
+ - `src/routes` — SvelteKit 路由與 server endpoints。
 
 行為守則（對 AI 代理的具體建議）
 - 在變更任何與使用者身分、授權或 DB schema 有關的程式碼之前，先搜尋並參考 `src/lib/server/auth.ts` 與 `src/lib/server/db/schema.ts`，並確認是否需要 migration；若需 migration，請同時更新 `drizzle` migration 並在 commit 中包含 `drizzle-kit` 指令建議。
